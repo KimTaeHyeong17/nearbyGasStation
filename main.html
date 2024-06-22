@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Station Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .form-group input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .gas-stations {
+            margin-top: 20px;
+        }
+        .gas-station {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 3px;
+        }
+        .gas-station h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        .gas-station p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Gas Station Search</h2>
+        <div class="form-group">
+            <label for="location">Current Location:</label>
+            <input type="text" id="location" name="location" placeholder="Enter your location">
+        </div>
+        <div class="form-group">
+            <label for="mpg">Miles per Gallon:</label>
+            <input type="text" id="mpg" name="mpg" placeholder="Enter your car's MPG">
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Search" onclick="searchGasStations()">
+        </div>
+        <div class="gas-stations" id="gas-stations">
+            <!-- Gas stations will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        function searchGasStations() {
+            const location = document.getElementById('location').value;
+            const mpg = parseFloat(document.getElementById('mpg').value);
+
+            if (isNaN(mpg) || mpg <= 0) {
+                alert('Please enter a valid number for Miles per Gallon (MPG).');
+                return;
+            }
+
+            fetch('https://66766789145714a1bd71a92f.mockapi.io/gas/api/v1/gasStatio')
+                .then(response => response.json())
+                .then(data => {
+                    const gasStations = calculateFinalPrices(data, mpg);
+                    displayGasStations(gasStations);
+                })
+                .catch(error => console.error('Error fetching gas stations:', error));
+        }
+
+        function calculateFinalPrices(gasStations, mpg) {
+            return gasStations.map(station => {
+                const distance = station.distance;
+                const pricePerGallon = parseFloat(station.price);
+                const gallonsNeeded = distance / mpg;
+                const finalPrice = (gallonsNeeded * pricePerGallon).toFixed(2);
+
+                return {
+                    ...station,
+                    finalPrice: parseFloat(finalPrice)
+                };
+            });
+        }
+
+        function displayGasStations(gasStations) {
+            // Sort gas stations by finalPrice ascending
+            gasStations.sort((a, b) => a.finalPrice - b.finalPrice);
+
+            const gasStationsDiv = document.getElementById('gas-stations');
+            gasStationsDiv.innerHTML = '';
+
+            gasStations.forEach(station => {
+                const stationDiv = document.createElement('div');
+                stationDiv.classList.add('gas-station');
+
+                const nameHeader = document.createElement('h3');
+                nameHeader.textContent = station.name;
+
+                const pricePara = document.createElement('p');
+                pricePara.textContent = 'Final Price: $' + station.finalPrice;
+
+                const distancePara = document.createElement('p');
+                distancePara.textContent = 'Distance: ' + station.distance + ' miles';
+
+                const originalPricePara = document.createElement('p');
+                originalPricePara.textContent = 'Original price: ' + station.price + ' $';
+	   
+
+                stationDiv.appendChild(nameHeader);
+                stationDiv.appendChild(pricePara);
+                stationDiv.appendChild(distancePara);
+	    stationDiv.appendChild(originalPricePara);
+
+                gasStationsDiv.appendChild(stationDiv);
+            });
+        }
+    </script>
+</body>
+</html>
